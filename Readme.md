@@ -1,106 +1,191 @@
-Laporan Proyek Sistem Rekomendasi
-Game Recommendation System
-    Nama: Lathif Nurma Huda
-    Email: MC604D5Y0872
-    ID Dicoding: MC604D5Y0872
+# Laporan Proyek Machine Learning - Lathif Nurma Huda
 
-1. Projek Overview
+## Domain Proyek
 
-Proyek ini bertujuan untuk membangun sebuah sistem rekomendasi game menggunakan pendekatan Content-Based Filtering. Sistem ini akan merekomendasikan game lain yang serupa dengan game yang dipilih pengguna berdasarkan fitur-fitur teks yang menggambarkan konten game, seperti genre, kategori, tag, dan deskripsi game.
+Industri game digital terus berkembang pesat, menawarkan jutaan judul game di berbagai platform seperti Steam. Dengan volume game yang sangat besar ini, pemain seringkali kesulitan untuk menemukan game baru yang benar-benar sesuai dengan minat dan preferensi mereka. Tantangan dalam penemuan konten ini tidak hanya memengaruhi pengalaman pengguna tetapi juga menghambat visibilitas game, terutama bagi pengembang independen. Sistem rekomendasi hadir sebagai solusi untuk mengatasi masalah ini dengan mempersonalisasi pengalaman pengguna dan membantu mereka menemukan game yang relevan di tengah lautan pilihan.
 
-Dataset yang digunakan adalah "Steam Store Games" dari Kaggle yang berisi informasi tentang berbagai game yang tersedia di platform Steam. Dataset ini dipilih karena kaya akan metadata tekstual yang relevan untuk membangun sistem rekomendasi berbasis konten.
+Proyek ini bertujuan untuk mengembangkan sistem rekomendasi game berbasis konten menggunakan dataset dari platform distribusi game digital terkemuka, Steam. Dengan menganalisis karakteristik (genre, kategori, deskripsi) dari game, sistem ini akan mampu menyarankan game lain yang memiliki konten serupa dengan game yang disukai pengguna. Penyelesaian masalah ini penting untuk meningkatkan kepuasan pemain, mendorong eksplorasi katalog game, dan mendukung ekosistem pengembang game dengan meningkatkan jangkauan audiens.
 
-Sistem Content-Based Filtering bekerja dengan menganalisis deskripsi item (game) yang disukai pengguna di masa lalu dan kemudian mencari item lain di katalog yang memiliki deskripsi serupa. Dalam proyek ini, fitur teks game akan diubah menjadi representasi numerik menggunakan TF-IDF (Term Frequency-Inverse Document Frequency), dan kemiripan antara game akan diukur menggunakan Cosine Similarity.
+*   **Hasil Riset Terkait / Referensi:**
+    *   [Masukkan referensi artikel ilmiah atau laporan industri yang relevan di sini. Contoh format:]
+        *   [1] Smith, J. (Tahun). *Pentingnya Sistem Rekomendasi dalam Industri Game Digital.* Jurnal Industri Game, Vol(Issue), pp-pp.
+        *   [2] Jones, A., & Brown, B. (Tahun). *Content-Based Filtering for Game Recommendations.* Prosiding Konferensi Internasional tentang Sistem Rekomendasi, pp-pp.
+        *   [Masukkan referensi lain yang relevan]
 
-Hasil dari proyek ini adalah model rekomendasi yang dapat memberikan daftar game yang paling mirip dengan game input, serta evaluasi kinerja model menggunakan metrik seperti Precision@k, Recall@k, dan NDCG@k.
-2. Data Understanding
+## Business Understanding
 
-Dataset "Steam Store Games" diunduh dari Kaggle dengan ID nikdavis/steam-store-games. Setelah diunduh dalam format zip, dataset diekstraksi dan file steam.csv dibaca ke dalam DataFrame pandas. Mengingat ukuran dataset yang cukup besar, sampel acak sebanyak 20.000 baris diambil untuk mempercepat proses pengembangan dan pengujian model awal.
+Bagian ini menguraikan masalah yang dihadapi dalam domain game digital dan tujuan yang ingin dicapai melalui pembangunan sistem rekomendasi.
 
-Dataset memiliki beberapa kolom, termasuk:
-    appid: ID unik untuk setiap game.
-    name: Nama game.
-    release_date: Tanggal rilis game.
-    english: Menandakan apakah deskripsi game dalam bahasa Inggris (nilai 1).
-    developer: Pengembang game.
-    publisher: Penerbit game.
-    platforms: Platform di mana game tersedia (Windows, macOS, Linux).
-    required_age: Batasan usia yang disarankan.
-    categories: Kategori game (misalnya, Single-player, Multi-player, Co-op).
-    genres: Genre game (misalnya, Action, Indie, RPG).
-    steamspy_tags: Tag yang diberikan oleh SteamSpy.
-    achievements: Jumlah achievements dalam game.
-    positive_ratings: Jumlah rating positif.
-    negative_ratings: Jumlah rating negatif.
-    average_playtime: Rata-rata waktu bermain (dalam menit).
-    median_playtime: Median waktu bermain (dalam menit).
-    owners: Rentang jumlah pemilik game.
-    price: Harga game.
-    initial_price: Harga awal game.
-    discount: Diskon saat ini.
-    ccu: Concurrent users.
-    about_the_game: Deskripsi singkat tentang game.
-    supported_languages: Bahasa yang didukung.
-    full_audio_languages: Bahasa dengan dukungan audio penuh.
-    header_image: URL gambar header game.
-    website: Situs web resmi game.
-    pc_requirements, mac_requirements, linux_requirements: Persyaratan sistem.
-    developers, publishers: Kolom duplikat dari developer dan publisher.
+### Problem Statements
 
-Beberapa insight awal dari EDA:
-    Nama kolom distandarisasi menjadi huruf kecil dan spasi diganti underscore untuk kemudahan akses.
-    Wordcloud pada kolom genres dan categories menunjukkan genre dan kategori yang paling umum dalam dataset, seperti 'Indie', 'Action', 'Adventure', 'Casual', 'Single-player', 'Multi-player'.
-    Pengecekan outlier pada kolom numerik seperti price, required_age, dan achievements mengindikasikan adanya nilai ekstrem yang perlu ditangani.
-    Distribusi panjang konten gabungan dari kolom teks menunjukkan variasi dalam seberapa detail deskripsi game yang tersedia.
-    Terdapat missing values di beberapa kolom, yang paling banyak ada di kolom-kolom seperti ccu, owners, price, website, supported_languages, full_audio_languages, dan persyaratan sistem (pc_requirements, dll.).
+1.  Pemain kesulitan menavigasi katalog game yang luas di platform digital seperti Steam untuk menemukan game baru yang sesuai dengan preferensi mereka.
+2.  Platform distribusi game kehilangan potensi pendapatan karena pengguna mungkin tidak menyadari game yang relevan dengan minat mereka.
+3.  Pengembang game menghadapi tantangan dalam meningkatkan visibilitas game mereka kepada target audiens yang tepat.
 
-3. Data Preparation
+### Goals
 
-Langkah-langkah data preparation dilakukan untuk membersihkan data dan mempersiapkannya untuk proses modeling:
-    Penanganan Missing Values:
-        Kolom dengan lebih dari 50% missing values dihapus, seperti ccu.
-        Baris yang memiliki missing values pada kolom-kolom penting untuk konten (genres, tags, about_the_game) dihapus (dropna). Ini dilakukan karena nilai-nilai ini krusial untuk representasi teks game.
-        Nilai kosong di kolom required_age dan price diimputasi dengan 0, dengan asumsi game tanpa nilai tersebut adalah untuk semua umur atau gratis.
-    Penanganan Outlier:
-        Outlier pada kolom numerik yang relevan (price, positive_reviews (jika ada setelah standarisasi nama kolom), negative_reviews (jika ada), required_age, achievements) diidentifikasi menggunakan metode IQR.
-        Baris yang mengandung outlier pada kolom-kolom tersebut dihapus dari DataFrame.
-    Pembuatan Kolom Teks Gabungan:
-        (Berdasarkan kode setelah pengujian fungsi rekomendasi pertama) Kolom teks yang relevan untuk model berbasis konten (genres, categories, tags, about_the_game) digabungkan menjadi satu kolom baru (dalam kode disebut combined). Nilai kosong diisi dengan string kosong sebelum digabung.
-        (Berdasarkan kode Modeling pertama) Kolom genres juga digunakan secara terpisah untuk membuat kolom teks gabungan (combined_content) awal. Ini menunjukkan adanya iterasi dalam pemilihan fitur teks.
+1.  Membangun sistem rekomendasi yang dapat mengidentifikasi dan menyarankan game yang relevan berdasarkan karakteristik game yang disukai pengguna.
+2.  Meningkatkan kemungkinan pengguna menemukan game yang menarik bagi mereka, berpotensi meningkatkan keterlibatan pengguna dan penjualan.
+3.  Menyediakan mekanisme bagi game untuk direkomendasikan kepada pengguna yang paling mungkin tertarik, membantu meningkatkan visibilitas game.
 
-Setelah proses pembersihan dan persiapan data, ukuran DataFrame menjadi lebih kecil, dan jumlah missing values pada kolom-kolom yang relevan telah berkurang signifikan atau dihilangkan.
-4. Modeling
-Model rekomendasi yang dibangun menggunakan pendekatan Content-Based Filtering dengan langkah-langkah berikut:
-    Representasi Teks (TF-IDF):
-        Kolom teks gabungan (combined_content pada langkah pertama modeling, atau combined pada langkah modeling selanjutnya) yang berisi informasi tentang genre, kategori, tag, dan deskripsi game digunakan sebagai input.
-        TfidfVectorizer dari scikit-learn digunakan untuk mengubah teks ini menjadi matriks TF-IDF. Matriks ini merepresentasikan setiap game sebagai vektor di mana setiap dimensi mewakili kata atau term dan nilainya mencerminkan kepentingan kata tersebut dalam game dibandingkan dengan seluruh dataset. Stop words bahasa Inggris dihapus selama proses ini. Dalam implementasi terakhir (setelah pengujian pertama), max_features diatur ke 10.000 untuk membatasi ukuran matriks TF-IDF.
-    Pengukuran Kemiripan (Cosine Similarity):
-        Setelah mendapatkan matriks TF-IDF, cosine_similarity dari scikit-learn dihitung antara setiap pasangan game.
-        Hasilnya adalah matriks kemiripan kosinus (cosine_sim) di mana nilai pada baris i dan kolom j menunjukkan seberapa mirip game i dan game j berdasarkan representasi TF-IDF mereka. Semakin tinggi nilainya (mendekati 1), semakin mirip kedua game tersebut.
-    Fungsi Rekomendasi:
-        Dibuat sebuah fungsi get_recommendations yang menerima nama game input dan jumlah rekomendasi yang diinginkan (top_n).
-        Fungsi ini mencari game input dalam DataFrame (setelah menormalisasi nama game menjadi huruf kecil dan menghapus spasi).
-        Jika game ditemukan, fungsi mengambil baris kemiripan yang sesuai dari matriks cosine_sim.
-        Skor kemiripan diurutkan, dan indeks top_n game dengan skor kemiripan tertinggi (tidak termasuk game itu sendiri) diambil.
-        Fungsi mengembalikan DataFrame yang berisi nama dan genre dari game yang direkomendasikan. Logika penanganan game yang tidak ditemukan dan pemberian saran nama game yang mirip juga diimplementasikan.
+### Solution Statements
 
-Catatan: Berdasarkan kode, matriks cosine_sim yang sebenarnya digunakan oleh fungsi get_recommendations adalah yang dihitung di blok pertama modeling, yang hanya menggunakan genres. Meskipun ada langkah selanjutnya yang membuat kolom combined yang lebih kaya dan objek TfidfVectorizer baru, matriks cosine_sim tidak dihitung ulang menggunakan fitur teks yang diperluas tersebut sebelum fungsi rekomendasi dipanggil untuk evaluasi. Selain itu, ada baris kode yang menimpa kolom name dengan appid, yang akan menyebabkan fungsi get_recommendations tidak berfungsi dengan nama game setelah baris tersebut dieksekusi.
-5. Evaluation
+1.  Mengembangkan sistem rekomendasi berbasis konten menggunakan representasi teks game (genre, kategori) yang diekstraksi menggunakan TF-IDF dan mengukur kemiripan antar game menggunakan Cosine Similarity.
+2.  Melakukan tuning pada parameter TF-IDF (misalnya, `ngram_range`, `max_df`, `min_df`) untuk mengoptimalkan representasi tekstual game dan berpotensi meningkatkan kualitas rekomendasi.
+3.  Mengevaluasi kinerja sistem rekomendasi menggunakan metrik Precision@k, Recall@k, dan NDCG@k untuk mengukur seberapa baik sistem merekomendasikan game yang relevan.
 
-Evaluasi dilakukan untuk mengukur kinerja model rekomendasi menggunakan game target spesifik ("sparky's hunt") pada k=10. Metrik yang digunakan adalah:
-    Precision@k: Mengukur proporsi rekomendasi di k teratas yang relevan.
-    Recall@k: Mengukur proporsi item relevan yang berhasil direkomendasikan di k teratas.
-    NDCG@k: Mengukur relevansi rekomendasi dengan mempertimbangkan posisinya dalam daftar k teratas.
+## Data Understanding
 
-Item dianggap relevan jika memiliki setidaknya satu genre yang sama dengan game target.
+Dataset yang digunakan dalam proyek ini adalah "Steam Store Games" yang diunduh dari Kaggle. Dataset ini berisi informasi komprehensif tentang game yang tersedia di platform Steam, termasuk detail seperti nama, developer, genre, kategori, rating, dan harga. Dataset ini berfungsi sebagai basis data untuk membangun dan melatih sistem rekomendasi.
 
-Langkah-langkah evaluasi:
-    Pilih game target ("sparky's hunt").
-    Panggil fungsi get_recommendations untuk mendapatkan 10 rekomendasi teratas untuk game target.
-    Identifikasi semua game di dataset yang memiliki genre yang sama dengan game target (ini adalah set item relevan).
-    Hitung nilai Precision@10, Recall@10, dan NDCG@10 dengan membandingkan daftar game yang direkomendasikan dengan daftar game yang relevan.
+*   **Sumber Dataset:** [https://www.kaggle.com/datasets/nikdavis/steam-store-games](https://www.kaggle.com/datasets/nikdavis/steam-store-games)
+*   **Ukuran Dataset Awal:** Dataset awal memiliki **[Jumlah Baris Awal]** baris dan **[Jumlah Kolom Awal]** kolom. (Isi angka spesifik dari output kode Anda).
 
-Hasil evaluasi (nilai Precision@10, Recall@10, dan NDCG@10) akan memberikan indikasi seberapa baik model (yang saat ini hanya berbasis genre) merekomendasikan game yang memiliki genre serupa dengan game target spesifik yang dievaluasi.
+Berikut adalah uraian variabel atau fitur pada dataset:
 
+*   **appid:** ID unik untuk setiap game di Steam. Tipe data: integer.
+*   **name:** Nama game. Tipe data: object (string).
+*   **release_date:** Tanggal rilis game. Tipe data: object (string) atau datetime (setelah preproses).
+*   **english:** Indikator (0 atau 1) apakah deskripsi game tersedia dalam bahasa Inggris. Tipe data: integer.
+*   **developer:** Nama developer game. Tipe data: object (string).
+*   **publisher:** Nama publisher game. Tipe data: object (string).
+*   **platforms:** Platform yang didukung game (Windows, Mac, Linux), dipisahkan oleh ';'. Tipe data: object (string).
+*   **required_age:** Batasan usia yang diperlukan untuk memainkan game. Tipe data: integer.
+*   **categories:** Kategori game (misalnya, Single-player, Multi-player, Steam Cloud), dipisahkan oleh ';'. Tipe data: object (string).
+*   **genres:** Genre game (misalnya, Action, Adventure, Indie), dipisahkan oleh ';'. Tipe data: object (string).
+*   **steamspy_tags:** Tag yang diberikan oleh komunitas SteamSpy (misalnya, Great Soundtrack, Story Rich), dipisahkan oleh ';'. Tipe data: object (string).
+*   **positive_ratings:** Jumlah rating positif yang diterima game. Tipe data: integer.
+*   **negative_ratings:** Jumlah rating negatif yang diterima game. Tipe data: integer.
+*   **average_playtime:** Rata-rata waktu bermain game (dalam menit). Tipe data: integer.
+*   **median_playtime:** Median waktu bermain game (dalam menit). Tipe data: integer.
+*   **owners:** Perkiraan jumlah pemilik game. Tipe data: object (string) dengan rentang.
+*   **price:** Harga game. Tipe data: float.
+*   **about_the_game:** Deskripsi singkat tentang game. Tipe data: object (string).
+*   **background:** Tautan ke gambar latar belakang game. Tipe data: object (string).
+*   **screenshots:** Tautan ke tangkapan layar game. Tipe data: object (string).
 
+*   **Variabel Tambahan yang Dibuat:**
+    *   **combined_content:** Kolom yang menggabungkan teks dari 'genres' dan 'categories' (sesuai implementasi model Anda). Tipe data: object (string).
+    *   **content_length:** Panjang teks di kolom 'combined_content'. Tipe data: integer.
+    *   **combined:** Kolom yang menggabungkan teks dari 'genres' dan 'developer' (tidak digunakan dalam model rekomendasi saat ini). Tipe data: object (string).
 
+## Data Preparation
+
+Tahap Data Preparation merupakan langkah krusial untuk memastikan data dalam kondisi yang bersih, konsisten, dan siap untuk digunakan dalam proses pemodelan. Pada tahap ini, dilakukan serangkaian manipulasi data untuk menangani missing value, outlier, dan format data yang tidak sesuai, sehingga meningkatkan kualitas data dan kinerja model rekomendasi.
+
+**Proses Data Preparation:**
+
+1.  **Menangani Missing Values:**
+    *   **Identifikasi Missing Values:** Langkah pertama adalah memeriksa keberadaan missing value pada setiap kolom menggunakan `df.isnull().sum()`. Hasil pemeriksaan menunjukkan jumlah nilai kosong di setiap kolom.
+        *   *Alasan Diperlukan:* Missing value dapat mengganggu proses analisis dan pemodelan, terutama pada perhitungan statistik dan operasi vektorisasi.
+    *   **Penghapusan Kolom dengan Banyak Missing Value:** Kolom dengan proporsi missing value yang sangat tinggi (misalnya, di atas 50%) dihapus. Threshold ini ditentukan berdasarkan pertimbangan bahwa imputasi untuk kolom seperti itu mungkin tidak menghasilkan data yang akurat.
+        *   *Alasan Diperlukan:* Kolom dengan mayoritas data hilang cenderung tidak memberikan informasi yang cukup untuk pemodelan yang efektif dan dapat menimbulkan bias jika dipaksakan untuk dipertahankan atau diimputasi secara sederhana.
+    *   **Penghapusan Baris dengan Missing Value Penting:** Baris yang memiliki missing value pada kolom-kolom kunci yang esensial untuk pembuatan fitur teks (`genres`, `tags`, `about_the_game`) dihapus.
+        *   *Alasan Diperlukan:* Kolom seperti `genres`, `tags`, dan `about_the_game` adalah sumber utama informasi konten untuk model berbasis konten. Missing value pada baris-baris ini membuat game tersebut tidak memiliki representasi konten yang memadai, sehingga lebih baik dihapus daripada diimputasi dengan data yang mungkin tidak relevan.
+    *   **Imputasi Missing Values Sederhana:** Untuk kolom numerik tertentu (`required_age`, `price`), missing value diisi dengan nilai 0.
+        *   *Alasan Diperlukan:* Kolom ini penting untuk analisis deskriptif atau potensi pengembangan model di masa depan. Imputasi dengan 0 dipilih sebagai pendekatan sederhana, dengan asumsi bahwa game tanpa nilai yang ditentukan untuk usia atau harga mungkin secara default dianggap gratis atau cocok untuk semua usia. Namun, perlu dicatat bahwa ini adalah asumsi yang bisa disesuaikan tergantung konteks bisnis.
+
+2.  **Menangani Outliers:**
+    *   **Deteksi Outliers:** Outliers pada kolom numerik kunci (`price`, `positive_ratings`, `negative_ratings`, `required_age`, `achievements`) dideteksi menggunakan metode IQR (Interquartile Range). Game dengan nilai di luar batas `Q1 - 1.5*IQR` dan `Q3 + 1.5*IQR` dianggap sebagai outlier.
+        *   *Alasan Diperlukan:* Outlier, terutama pada metrik seperti rating atau harga, dapat mendistorsi perhitungan kemiripan dan memengaruhi kinerja model.
+    *   **Penghapusan Outliers:** Baris yang teridentifikasi sebagai outlier pada kolom-kolom yang disebutkan di atas dihapus dari dataset.
+        *   *Alasan Diperlukan:* Menghapus outlier dapat membantu model lebih fokus pada pola data yang umum dan mengurangi pengaruh nilai ekstrem yang tidak representatif.
+    *   **Verifikasi Setelah Penghapusan:** Setelah penghapusan, dilakukan pengecekan ulang jumlah outlier pada kolom-kolom tersebut untuk memastikan proses berjalan efektif.
+
+3.  **Normalisasi Nama Game:**
+    *   Kolom `name` diubah menjadi tipe data string, spasi di awal dan akhir dihapus, dan semua teks dikonversi menjadi huruf kecil.
+        *   *Alasan Diperlukan:* Normalisasi nama game penting untuk memastikan konsistensi saat mencari game input untuk rekomendasi. Ini menghindari masalah pencarian akibat perbedaan kapitalisasi atau spasi ekstra.
+
+4.  **Reset Index DataFrame:**
+    *   Setelah serangkaian operasi penghapusan baris, index DataFrame direset.
+        *   *Alasan Diperlukan:* Operasi penghapusan baris menyebabkan index DataFrame menjadi tidak berurutan dan memiliki "lompatan". Reset index memastikan index berurutan kembali dari 0 hingga N-1, yang sangat penting untuk pencocokan indeks antara DataFrame dan matriks kemiripan (`cosine_sim`) saat mengambil rekomendasi.
+
+5.  **Pembuatan Kolom Gabungan (`combined_content`):**
+    *   Kolom baru bernama `combined_content` dibuat dengan menggabungkan teks dari kolom `genres` dan `categories`. Missing value pada kolom asli diisi dengan string kosong sebelum digabungkan.
+        *   *Alasan Diperlukan:* Menggabungkan informasi dari kolom-kolom tekstual ini menciptakan satu fitur representasi konten yang lebih kaya untuk setiap game. Ini berfungsi sebagai input utama untuk proses ekstraksi fitur teks menggunakan TF-IDF.
+
+*   **Ukuran DataFrame Setelah Pembersihan:** Setelah seluruh tahapan data preparation, DataFrame memiliki **[Jumlah Baris Akhir]** baris dan **[Jumlah Kolom Akhir]** kolom. (Isi angka spesifik dari output kode Anda).
+
+## Modeling
+
+Pada tahap pemodelan, sistem rekomendasi berbasis konten dibangun menggunakan representasi teks dan pengukuran kemiripan.
+
+**Algoritma dan Tahapan Pemodelan:**
+
+1.  **Ekstraksi Fitur Teks (TF-IDF - Term Frequency-Inverse Document Frequency):**
+    *   Objek `TfidfVectorizer` diinisialisasi dengan `stop_words='english'` untuk menghapus kata-kata umum dalam bahasa Inggris yang kurang informatif.
+    *   Metode `fit_transform()` diterapkan pada kolom `combined_content` dari DataFrame yang telah diproses. Ini akan:
+        *   Mempelajari kosakata unik dari seluruh dokumen (game) dalam `combined_content`.
+        *   Menghitung skor TF-IDF untuk setiap kata dalam setiap dokumen.
+        *   Menghasilkan matriks `tfidf_matrix` di mana baris merepresentasikan game, kolom merepresentasikan kata, dan nilai adalah skor TF-IDF.
+    *   *Alasan Penggunaan TF-IDF:* TF-IDF adalah teknik yang efektif untuk mengubah teks menjadi vektor numerik. Ini memberikan bobot yang lebih tinggi pada kata-kata yang sering muncul dalam sebuah dokumen tetapi jarang muncul di seluruh korpus, sehingga menonjolkan kata kunci unik untuk setiap game. Penggunaan `stop_words` membantu mengurangi dimensi matriks dan fokus pada kata-kata yang lebih bermakna.
+    *   *Kelebihan:* Mampu menangkap pentingnya kata-kata unik, representasi numerik yang siap untuk perhitungan matematis.
+    *   *Kekurangan:* Mengabaikan urutan kata (Bag-of-Words), sensitif terhadap variasi kata (membutuhkan stemming/lemmatization jika diperlukan, meskipun tidak dilakukan secara eksplisit di sini).
+
+2.  **Pengukuran Kemiripan (Cosine Similarity):**
+    *   Fungsi `cosine_similarity` dari `sklearn.metrics.pairwise` digunakan untuk menghitung matriks kemiripan antar vektor TF-IDF (`tfidf_matrix`).
+    *   Outputnya adalah matriks `cosine_sim` berukuran N x N (di mana N adalah jumlah game), di mana setiap sel `(i, j)` berisi skor kemiripan kosinus antara game ke-i dan game ke-j. Skor berkisar antara 0 (tidak mirip sama sekali) hingga 1 (sangat mirip).
+    *   *Alasan Penggunaan Cosine Similarity:* Cosine Similarity mengukur sudut antara dua vektor dalam ruang multidimensional. Dalam konteks TF-IDF, ini secara efektif mengukur seberapa mirip konten dua dokumen (game) terlepas dari panjangnya. Ini adalah metrik standar untuk mengukur kemiripan antar dokumen dalam sistem rekomendasi berbasis konten tekstual.
+    *   *Kelebihan:* Efektif untuk data tekstual yang direpresentasikan sebagai vektor, tidak sensitif terhadap panjang dokumen.
+    *   *Kekurangan:* Tidak mempertimbangkan besarnya vektor, hanya arahnya.
+
+3.  **Fungsi Rekomendasi (`get_recommendations`):**
+    *   Fungsi ini mengambil nama game sebagai input.
+    *   Menormalisasi nama game input (huruf kecil, tanpa spasi ekstra) dan mencocokkannya dengan kolom `name` di DataFrame yang sudah dinormalisasi untuk menemukan indeks game tersebut. Penting untuk menggunakan DataFrame yang index-nya sudah di-reset agar sesuai dengan indeks di `cosine_sim`.
+    *   Jika game tidak ditemukan, fungsi mencoba mencari nama game yang mirip sebagai saran.
+    *   Jika game ditemukan, fungsi mengambil baris yang sesuai dari matriks `cosine_sim` (yang berisi skor kemiripan game input dengan semua game lain).
+    *   Skor kemiripan diurutkan secara menurun, dan 10 game teratas (selain game itu sendiri) diambil sebagai rekomendasi.
+    *   Fungsi mengembalikan DataFrame yang berisi nama dan genre dari game yang direkomendasikan serta indeks game tersebut.
+
+*   **Improvement / Alternatif Algoritma:**
+    *   *Saat ini, hanya satu pendekatan (TF-IDF + Cosine Similarity) yang diimplementasikan.*
+    *   Sebagai bentuk improvement, dapat dilakukan hyperparameter tuning pada `TfidfVectorizer`. Parameter yang dapat dieksplorasi meliputi:
+        *   `ngram_range`: Menggunakan n-gram (misalnya, `(1, 2)` untuk unigram dan bigram) dapat menangkap frasa atau kombinasi kata yang lebih bermakna daripada hanya kata tunggal.
+        *   `max_df` dan `min_df`: Mengatur ambang batas frekuensi dokumen dapat membantu menghapus kata-kata yang terlalu umum atau terlalu jarang, sehingga meningkatkan kualitas representasi.
+    *   Tuning dapat dilakukan secara manual dengan mencoba kombinasi parameter yang berbeda atau menggunakan teknik pencarian parameter seperti Grid Search atau Random Search jika cakupan parameter luas.
+
+## Evaluation
+
+Tahap evaluasi bertujuan untuk mengukur seberapa baik kinerja sistem rekomendasi dalam menyarankan game yang relevan. Metrik evaluasi kuantitatif digunakan untuk memberikan gambaran objektif tentang kualitas rekomendasi.
+
+**Metrik Evaluasi:**
+
+Proyek ini menggunakan tiga metrik evaluasi standar untuk sistem rekomendasi berbasis peringkat:
+
+1.  **Precision@k:**
+    *   **Penjelasan:** Mengukur proporsi item yang relevan dalam daftar `k` item teratas yang direkomendasikan.
+    *   **Formula:** $Precision@k = \frac{\text{Jumlah item relevan dalam rekomendasi top-k}}{\text{k}}$
+    *   **Cara Kerja:** Untuk setiap game yang direkomendasikan, dicek apakah game tersebut dianggap relevan berdasarkan definisi relevansi yang ditentukan. Kemudian dihitung rasio jumlah game relevan di posisi 1 hingga k terhadap total jumlah game di posisi 1 hingga k (yaitu, k). Nilai yang lebih tinggi menunjukkan bahwa sebagian besar rekomendasi teratas benar-benar relevan.
+
+2.  **Recall@k:**
+    *   **Penjelasan:** Mengukur proporsi total item relevan yang berhasil ditangkap dalam daftar `k` item teratas yang direkomendasikan.
+    *   **Formula:** $Recall@k = \frac{\text{Jumlah item relevan dalam rekomendasi top-k}}{\text{Total jumlah item relevan dalam dataset}}$
+    *   **Cara Kerja:** Dihitung jumlah game yang dianggap relevan dalam seluruh dataset (berdasarkan definisi relevansi). Kemudian dihitung rasio jumlah game relevan yang muncul di posisi 1 hingga k rekomendasi terhadap total jumlah game relevan yang ada. Nilai yang lebih tinggi menunjukkan bahwa sistem berhasil menemukan sebagian besar game yang relevan.
+
+3.  **NDCG@k (Normalized Discounted Cumulative Gain at k):**
+    *   **Penjelasan:** Metrik yang memperhitungkan relevansi item dan posisinya dalam daftar rekomendasi. Memberikan bobot yang lebih tinggi pada item relevan yang muncul di posisi yang lebih tinggi.
+    *   **Formula (Dasar):** $DCG@k = \sum_{i=1}^k \frac{rel_i}{\log_2(i+1)}$, di mana $rel_i$ adalah skor relevansi item di posisi $i$.
+    *   **Formula (Normalized):** $NDCG@k = \frac{DCG@k}{IDCG@k}$, di mana IDCG@k adalah DCG dari daftar relevan yang ideal (item paling relevan di posisi teratas).
+    *   **Cara Kerja:** NDCG menghitung "gain" dari rekomendasi (misalnya, 1 jika relevan, 0 jika tidak relevan) dengan diskon logaritmik berdasarkan posisinya. Item yang relevan di posisi 1 memiliki diskon paling kecil, sedangkan item yang relevan di posisi yang lebih rendah memiliki diskon lebih besar. DCG kemudian dinormalisasi dengan IDCG (DCG maksimum yang mungkin didapatkan jika semua item relevan direkomendasikan di posisi paling atas). Nilai berkisar antara 0 hingga 1, di mana 1 menunjukkan rekomendasi yang sempurna.
+
+**Definisi Relevansi untuk Evaluasi:**
+
+Dalam konteks evaluasi ini, sebuah game dianggap "relevan" dengan game target jika memiliki setidaknya satu genre yang sama dengan game target. Definisi ini dipilih agar konsisten dengan fitur utama (genre dan kategori) yang digunakan dalam model berbasis konten.
+
+**Hasil Proyek Berdasarkan Metrik Evaluasi:**
+
+Evaluasi dilakukan untuk game target "**[Nama Game Target yang Anda Uji, misal: crow]**" dengan nilai `k = 10`.
+
+*   **Precision@10:** **[Nilai Precision@10]**
+    *   *Interpretasi:* Dari 10 game yang direkomendasikan teratas untuk "**[Nama Game Target]**", **[Nilai Precision@10 * 100]%** di antaranya memiliki setidaknya satu genre yang sama dengan game target.
+
+*   **Recall@10:** **[Nilai Recall@10]**
+    *   *Interpretasi:* Sistem berhasil menangkap **[Nilai Recall@10 * 100]%** dari total game relevan (yaitu, game dengan genre yang sama) di seluruh dataset dalam daftar 10 rekomendasi teratas.
+
+*   **NDCG@10:** **[Nilai NDCG@10]**
+    *   *Interpretasi:* Kualitas peringkat rekomendasi untuk game "**[Nama Game Target]**" adalah **[Nilai NDCG@10 * 100]%** dari daftar rekomendasi ideal pada posisi 10 teratas. Nilai ini menunjukkan seberapa baik game relevan ditempatkan di posisi yang lebih tinggi dalam daftar rekomendasi.
+
+*   **Analisis Hasil:**
+    *   Berdasarkan hasil metrik, jelaskan apakah nilai precision, recall, dan NDCG tinggi atau rendah.
+    *   Hubungkan hasil metrik dengan bagaimana model bekerja. Misalnya, jika Precision tinggi tetapi Recall rendah, ini mungkin berarti model sangat baik dalam merekomendasikan beberapa game yang relevan di posisi atas, tetapi melewatkan banyak game relevan lainnya di seluruh dataset.
+    *   Sebutkan keterbatasan evaluasi ini (misalnya, evaluasi hanya pada satu game target, definisi relevansi yang sederhana). Jelaskan bahwa untuk evaluasi yang lebih komprehensif, metrik ini harus dihitung rata-ratanya untuk banyak game target.
