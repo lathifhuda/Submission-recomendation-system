@@ -174,18 +174,27 @@ Dalam konteks evaluasi ini, sebuah game dianggap "relevan" dengan game target ji
 
 **Hasil Proyek Berdasarkan Metrik Evaluasi:**
 
-Evaluasi dilakukan untuk game target "**[Nama Game Target yang Anda Uji, misal: crow]**" dengan nilai `k = 10`.
+Evaluasi dilakukan untuk game target "**crow**" dengan nilai `k = 10`.
 
-*   **Precision@10:** **[Nilai Precision@10]**
-    *   *Interpretasi:* Dari 10 game yang direkomendasikan teratas untuk "**[Nama Game Target]**", **[Nilai Precision@10 * 100]%** di antaranya memiliki setidaknya satu genre yang sama dengan game target.
+*   **Precision@10:** 1.00
+    *   *Interpretasi:* Hasil Precision@10 sebesar 1.00 menunjukkan bahwa **semua** (100%) dari 10 game teratas yang direkomendasikan untuk game "crow" dianggap relevan, yaitu memiliki setidaknya satu genre yang sama dengan "crow". Ini mengindikasikan bahwa rekomendasi yang diberikan di posisi paling atas sangat akurat dalam hal kesamaan genre.
 
-*   **Recall@10:** **[Nilai Recall@10]**
-    *   *Interpretasi:* Sistem berhasil menangkap **[Nilai Recall@10 * 100]%** dari total game relevan (yaitu, game dengan genre yang sama) di seluruh dataset dalam daftar 10 rekomendasi teratas.
+*   **Recall@10:** 0.00
+    *   *Interpretasi:* Hasil Recall@10 sebesar 0.00 berarti bahwa **tidak ada satu pun** (0%) dari total game relevan yang ada di seluruh dataset (game dengan genre yang sama dengan "crow") yang berhasil masuk ke dalam daftar 10 rekomendasi teratas.
 
-*   **NDCG@10:** **[Nilai NDCG@10]**
-    *   *Interpretasi:* Kualitas peringkat rekomendasi untuk game "**[Nama Game Target]**" adalah **[Nilai NDCG@10 * 100]%** dari daftar rekomendasi ideal pada posisi 10 teratas. Nilai ini menunjukkan seberapa baik game relevan ditempatkan di posisi yang lebih tinggi dalam daftar rekomendasi.
+*   **NDCG@10:** 1.00
+    *   *Interpretasi:* Hasil NDCG@10 sebesar 1.00 menunjukkan bahwa kualitas peringkat rekomendasi untuk game "crow" adalah sempurna pada posisi 10 teratas, relatif terhadap daftar ideal yang hanya mempertimbangkan relevansi berdasarkan genre. Nilai 1.00 tercapai karena *jika* ada item relevan dalam 10 rekomendasi teratas, mereka ditempatkan di posisi yang optimal. Dikombinasikan dengan Precision 1.00, ini menunjukkan bahwa semua item dalam 10 rekomendasi adalah relevan (sesuai definisi relevansi) dan mereka diberi peringkat dengan cara yang ideal.
 
 *   **Analisis Hasil:**
-    *   Berdasarkan hasil metrik, jelaskan apakah nilai precision, recall, dan NDCG tinggi atau rendah.
-    *   Hubungkan hasil metrik dengan bagaimana model bekerja. Misalnya, jika Precision tinggi tetapi Recall rendah, ini mungkin berarti model sangat baik dalam merekomendasikan beberapa game yang relevan di posisi atas, tetapi melewatkan banyak game relevan lainnya di seluruh dataset.
-    *   Sebutkan keterbatasan evaluasi ini (misalnya, evaluasi hanya pada satu game target, definisi relevansi yang sederhana). Jelaskan bahwa untuk evaluasi yang lebih komprehensif, metrik ini harus dihitung rata-ratanya untuk banyak game target.
+    Hasil evaluasi ini memberikan gambaran yang menarik dan sedikit kontradiktif. Precision@10 dan NDCG@10 yang bernilai 1.00 menunjukkan bahwa **untuk game yang direkomendasikan di posisi 1 hingga 10, semuanya dianggap relevan berdasarkan definisi relevansi (memiliki genre yang sama)**, dan penempatannya di posisi teratas sudah optimal. Namun, Recall@10 yang bernilai 0.00 menunjukkan bahwa **meskipun 10 game teratas relevan, mereka tidak mencakup game relevan lainnya yang mungkin ada di dataset** (game lain yang juga memiliki genre yang sama dengan "crow" tetapi tidak muncul di 10 teratas).
+
+    Kemungkinan penyebab hasil ini:
+    1.  **Jumlah Game Relevan Total Sangat Besar:** Mungkin ada sangat banyak game di dataset yang memiliki genre yang sama dengan "crow". Meskipun 10 rekomendasi teratas semuanya relevan, jumlah total game relevan jauh lebih besar dari 10, sehingga proporsi yang berhasil ditangkap (Recall) menjadi sangat rendah atau nol.
+    2.  **Definisi Relevansi yang Luas:** Definisi relevansi (memiliki "setidaknya satu genre yang sama") mungkin terlalu luas. Matriks kemiripan kosinus mungkin mengidentifikasi game yang "paling" mirip (skor kosinus tertinggi) di antara semua game, dan 10 game teratas kebetulan memiliki genre yang sama. Namun, banyak game lain dengan genre yang sama mungkin memiliki skor kemiripan kosinus yang jauh lebih rendah dan tidak masuk ke dalam 10 teratas, meskipun mereka juga dianggap "relevan" oleh definisi kita.
+    3.  **Fokus Model pada Genre:** Karena model Anda saat ini hanya menggunakan 'genres' dan 'categories' untuk `combined_content`, matriks kemiripan sangat didominasi oleh kesamaan genre dan kategori. Ini menjelaskan mengapa rekomendasi teratas memiliki genre yang sama (Precision 1.00).
+
+    Secara keseluruhan, model ini tampaknya sangat baik dalam merekomendasikan game yang *paling* mirip kontennya (berdasarkan genre/kategori) di posisi teratas. Namun, Recall yang rendah menyarankan bahwa model mungkin tidak efisien dalam menemukan *semua* game relevan yang tersebar di seluruh dataset, terutama jika jumlah game relevan sangat besar. Untuk mendapatkan gambaran kinerja yang lebih lengkap, disarankan untuk menghitung rata-rata metrik ini untuk sejumlah game target yang lebih banyak.
+
+*   **Keterbatasan Evaluasi:** Penting untuk diingat bahwa evaluasi ini dilakukan hanya pada satu game target ("crow") dan menggunakan definisi relevansi berbasis kesamaan genre sederhana. Kinerja model dapat bervariasi untuk game lain. Evaluasi yang lebih robust akan melibatkan perhitungan rata-rata metrik ini untuk sampel game target yang lebih representatif.
+
+---Ini adalah bagian akhir laporan---
