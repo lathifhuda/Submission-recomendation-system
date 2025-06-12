@@ -39,7 +39,7 @@ Bagian ini menguraikan masalah yang dihadapi dalam domain game digital dan tujua
 Dataset yang digunakan dalam proyek ini adalah "Steam Store Games" yang diunduh dari Kaggle. Dataset ini berisi informasi komprehensif tentang game yang tersedia di platform Steam, termasuk detail seperti nama, developer, genre, kategori, rating, dan harga. Dataset ini berfungsi sebagai basis data untuk membangun dan melatih sistem rekomendasi.
 
 *   **Sumber Dataset:** [https://www.kaggle.com/datasets/nikdavis/steam-store-games](https://www.kaggle.com/datasets/nikdavis/steam-store-games)
-*   **Ukuran Dataset Awal:** Dataset awal memiliki **[Jumlah Baris Awal]** baris dan **[Jumlah Kolom Awal]** kolom. (Isi angka spesifik dari output kode Anda).
+*   **Ukuran Dataset Awal:** Dataset awal memiliki **27075** baris dan **18** kolom.
 
 Berikut adalah uraian variabel atau fitur pada dataset:
 
@@ -73,76 +73,123 @@ Berikut adalah uraian variabel atau fitur pada dataset:
 
 Tahap Data Preparation merupakan langkah krusial untuk memastikan data dalam kondisi yang bersih, konsisten, dan siap untuk digunakan dalam proses pemodelan. Pada tahap ini, dilakukan serangkaian manipulasi data untuk menangani missing value, outlier, dan format data yang tidak sesuai, sehingga meningkatkan kualitas data dan kinerja model rekomendasi.
 
+## Data Preparation
+
+Tahap Data Preparation merupakan langkah krusial untuk memastikan data dalam kondisi yang bersih, konsisten, dan siap untuk digunakan dalam proses pemodelan. Pada tahap ini, dilakukan serangkaian manipulasi data untuk menangani missing value, outlier, format data yang tidak sesuai, serta penyesuaian fitur.
+
 **Proses Data Preparation:**
 
-1.  **Menangani Missing Values:**
-    *   **Identifikasi Missing Values:** Langkah pertama adalah memeriksa keberadaan missing value pada setiap kolom menggunakan `df.isnull().sum()`. Hasil pemeriksaan menunjukkan jumlah nilai kosong di setiap kolom.
-        *   *Alasan Diperlukan:* Missing value dapat mengganggu proses analisis dan pemodelan, terutama pada perhitungan statistik dan operasi vektorisasi.
-    *   **Penghapusan Kolom dengan Banyak Missing Value:** Kolom dengan proporsi missing value yang sangat tinggi (misalnya, di atas 50%) dihapus. Threshold ini ditentukan berdasarkan pertimbangan bahwa imputasi untuk kolom seperti itu mungkin tidak menghasilkan data yang akurat.
-        *   *Alasan Diperlukan:* Kolom dengan mayoritas data hilang cenderung tidak memberikan informasi yang cukup untuk pemodelan yang efektif dan dapat menimbulkan bias jika dipaksakan untuk dipertahankan atau diimputasi secara sederhana.
-    *   **Penghapusan Baris dengan Missing Value Penting:** Baris yang memiliki missing value pada kolom-kolom kunci yang esensial untuk pembuatan fitur teks (`genres`, `tags`, `about_the_game`) dihapus.
-        *   *Alasan Diperlukan:* Kolom seperti `genres`, `tags`, dan `about_the_game` adalah sumber utama informasi konten untuk model berbasis konten. Missing value pada baris-baris ini membuat game tersebut tidak memiliki representasi konten yang memadai, sehingga lebih baik dihapus daripada diimputasi dengan data yang mungkin tidak relevan.
-    *   **Imputasi Missing Values Sederhana:** Untuk kolom numerik tertentu (`required_age`, `price`), missing value diisi dengan nilai 0.
-        *   *Alasan Diperlukan:* Kolom ini penting untuk analisis deskriptif atau potensi pengembangan model di masa depan. Imputasi dengan 0 dipilih sebagai pendekatan sederhana, dengan asumsi bahwa game tanpa nilai yang ditentukan untuk usia atau harga mungkin secara default dianggap gratis atau cocok untuk semua usia. Namun, perlu dicatat bahwa ini adalah asumsi yang bisa disesuaikan tergantung konteks bisnis.
+1.  **Penanganan Missing Values Awal (Dropna Global):**
+    *   Langkah pertama dalam menangani missing value adalah dengan menghapus baris yang mengandung nilai kosong pada kolom manapun menggunakan perintah `df.dropna()`.
+        *   *Alasan Diperlukan:* Baris yang memiliki missing value pada kolom-kolom penting seperti `developer` atau `publisher` tidak memberikan informasi lengkap mengenai atribut kunci game. Penghapusan baris-baris ini pada tahap awal adalah pendekatan pembersihan cepat untuk memastikan setiap observasi memiliki informasi dasar yang esensial. Langkah ini efektif untuk mengurangi dataset dari baris yang kurang lengkap di berbagai atribut.
+        *   *Dampak:* Langkah ini menghapus semua baris yang memiliki setidaknya satu nilai kosong di kolom manapun saat perintah dijalankan, termasuk baris dengan missing value pada kolom `developer` dan `publisher`.
 
-2.  **Menangani Outliers:**
-    *   **Deteksi Outliers:** Outliers pada kolom numerik kunci (`price`, `positive_ratings`, `negative_ratings`, `required_age`, `achievements`) dideteksi menggunakan metode IQR (Interquartile Range). Game dengan nilai di luar batas `Q1 - 1.5*IQR` dan `Q3 + 1.5*IQR` dianggap sebagai outlier.
-        *   *Alasan Diperlukan:* Outlier, terutama pada metrik seperti rating atau harga, dapat mendistorsi perhitungan kemiripan dan memengaruhi kinerja model.
-    *   **Penghapusan Outliers:** Baris yang teridentifikasi sebagai outlier pada kolom-kolom yang disebutkan di atas dihapus dari dataset.
-        *   *Alasan Diperlukan:* Menghapus outlier dapat membantu model lebih fokus pada pola data yang umum dan mengurangi pengaruh nilai ekstrem yang tidak representatif.
-    *   **Verifikasi Setelah Penghapusan:** Setelah penghapusan, dilakukan pengecekan ulang jumlah outlier pada kolom-kolom tersebut untuk memastikan proses berjalan efektif.
+2.  **Identifikasi dan Penghapusan Kolom dengan Banyak Missing Value:**
+    *   Setelah `df.dropna()` awal, dilakukan pengecekan kembali jumlah missing value yang tersisa.
+    *   Kolom dengan proporsi missing value yang sangat tinggi (di atas ambang batas 50%) diidentifikasi dan dihapus dari DataFrame.
+        *   *Alasan Diperlukan:* Meskipun `df.dropna()` awal sudah menghapus banyak missing value, beberapa mungkin tersisa atau muncul kembali setelah operasi lain (misalnya, konversi tipe data dengan `errors='coerce'` di kode yang lengkap). Menghapus kolom dengan mayoritas data hilang memastikan dataset hanya berisi kolom yang memiliki informasi substansial dan relevan untuk analisis dan pemodelan.
 
-3.  **Normalisasi Nama Game:**
+3.  **Penghapusan Baris dengan Missing Value pada Kolom Penting yang Ada:**
+    *   Didefinisikan daftar kolom yang dianggap penting untuk model (`genres`, `tags`, `about_the_game`).
+    *   Dataset kemudian difilter untuk menghapus baris yang masih memiliki missing value pada kolom-kolom yang termasuk dalam daftar "penting" *dan masih ada* di DataFrame.
+        *   *Alasan Diperlukan:* Kolom-kolom ini (`genres`, `tags`, `about_the_game`) sangat krusial sebagai sumber informasi konten untuk model berbasis teks. Menghapus baris yang masih memiliki missing value di sini memastikan bahwa setiap game yang digunakan untuk pemodelan memiliki data konten yang memadai untuk proses ekstraksi fitur teks.
+
+4.  **Imputasi Missing Values pada Kolom Spesifik:**
+    *   Missing value pada kolom `required_age` diisi dengan nilai 0 jika kolom tersebut masih ada di DataFrame.
+    *   Missing value pada kolom `price` diisi dengan nilai 0 jika kolom tersebut masih ada di DataFrame.
+        *   *Alasan Diperlukan:* Kolom numerik ini penting untuk analisis atau penggunaan fitur di masa mendatang. Mengisi missing value dengan 0 adalah pendekatan sederhana untuk memastikan tidak ada nilai kosong yang tersisa pada kolom yang akan digunakan. Pendekatan 0 dipilih sebagai nilai default yang mengindikasikan tidak ada batasan usia atau harga gratis.
+
+5.  **Normalisasi Nama Kolom:**
+    *   Nama-nama kolom diubah menjadi huruf kecil dan spasi diganti dengan underscore (`_`). (Berdasarkan kode Anda, langkah ini sebenarnya dilakukan lebih awal di notebook, tetapi untuk kelengkapan, bisa disebutkan di sini sebagai bagian dari pembersihan awal).
+        *   *Alasan Diperlukan:* Normalisasi nama kolom memudahkan akses dan konsistensi dalam penulisan kode.
+
+6.  **Penghapusan Kolom 'appid':**
+    *   Kolom 'appid' dihapus dari DataFrame. (Seperti normalisasi nama kolom, ini juga dilakukan lebih awal di notebook).
+        *   *Alasan Diperlukan:* Kolom 'appid' merupakan identifikasi unik dan tidak relevan untuk fitur konten yang digunakan dalam model ini.
+
+7.  **Konversi Tipe Data Numerik:**
+    *   Beberapa kolom dikonversi menjadi tipe data numerik (float atau integer) menggunakan `pd.to_numeric` dengan `errors='coerce'`. Kolom yang dikonversi meliputi `achievements`, `positive_ratings`, `negative_ratings`, `average_playtime`, `median_playtime`, dan `price`. (Langkah ini juga dilakukan lebih awal di notebook, setelah penghapusan `appid` dan sebelum pembuatan kolom `combined`).
+        *   *Alasan Diperlukan:* Memastikan tipe data numerik yang tepat memungkinkan operasi matematis dan penggunaan kolom dalam algoritma yang memerlukan input numerik.
+
+8.  **Pembuatan Kolom Gabungan 'combined' (genres dan developer):**
+    *   Kolom baru bernama `combined` dibuat dengan menggabungkan teks dari kolom `genres` dan `developer`. Missing value diisi string kosong sebelum digabung. (Langkah ini dilakukan setelah konversi tipe data numerik).
+        *   *Alasan Diperlukan:* Kolom ini dibuat sebagai fitur potensial untuk menggabungkan informasi genre dan pengembang, meskipun tidak digunakan dalam model rekomendasi berbasis konten yang ditunjukkan.
+
+9.  **Menangani Outlier (Menggunakan IQR):**
+    *   Outlier pada kolom numerik terpilih (`price`, `positive_ratings`, `negative_ratings`, `required_age`, `achievements`) dihapus menggunakan metode IQR. Baris dengan nilai di luar batas `Q1 - 1.5*IQR` dan `Q3 + 1.5*IQR` untuk kolom-kolom ini dihapus dari dataset.
+        *   *Alasan Diperlukan:* Menghapus outlier membantu menghasilkan data yang lebih homogen dan mengurangi pengaruh nilai ekstrem, yang dapat meningkatkan akurasi pengukuran kemiripan.
+
+10. **Normalisasi Nama Game:**
     *   Kolom `name` diubah menjadi tipe data string, spasi di awal dan akhir dihapus, dan semua teks dikonversi menjadi huruf kecil.
-        *   *Alasan Diperlukan:* Normalisasi nama game penting untuk memastikan konsistensi saat mencari game input untuk rekomendasi. Ini menghindari masalah pencarian akibat perbedaan kapitalisasi atau spasi ekstra.
+        *   *Alasan Diperlukan:* Normalisasi nama game penting untuk konsistensi saat mencari game input dan mencocokkannya dengan data.
 
-4.  **Reset Index DataFrame:**
-    *   Setelah serangkaian operasi penghapusan baris, index DataFrame direset.
-        *   *Alasan Diperlukan:* Operasi penghapusan baris menyebabkan index DataFrame menjadi tidak berurutan dan memiliki "lompatan". Reset index memastikan index berurutan kembali dari 0 hingga N-1, yang sangat penting untuk pencocokan indeks antara DataFrame dan matriks kemiripan (`cosine_sim`) saat mengambil rekomendasi.
+11. **Reset Index DataFrame:**
+    *   Setelah serangkaian operasi penghapusan baris, index DataFrame direset untuk memastikan index berurutan kembali dari 0 hingga N-1.
+        *   *Alasan Diperlukan:* Reset index penting untuk pencocokan indeks antara DataFrame dan matriks kemiripan saat mengambil rekomendasi.
 
-5.  **Pembuatan Kolom Gabungan (`combined_content`):**
-    *   Kolom baru bernama `combined_content` dibuat dengan menggabungkan teks dari kolom `genres` dan `categories`. Missing value pada kolom asli diisi dengan string kosong sebelum digabungkan.
-        *   *Alasan Diperlukan:* Menggabungkan informasi dari kolom-kolom tekstual ini menciptakan satu fitur representasi konten yang lebih kaya untuk setiap game. Ini berfungsi sebagai input utama untuk proses ekstraksi fitur teks menggunakan TF-IDF.
+12. **Pembuatan Kolom Gabungan 'combined_content' (genres dan categories):**
+    *   Kolom baru bernama `combined_content` dibuat dengan menggabungkan teks dari kolom `genres` dan `categories`. Missing value diisi string kosong sebelum digabungkan. Kolom ini akan menjadi input utama untuk TF-IDF.
+        *   *Alasan Diperlukan:* Menggabungkan informasi dari kolom genre dan kategori menciptakan satu representasi konten yang lebih kaya untuk setiap game, yang akan digunakan oleh model rekomendasi berbasis konten.
 
-*   **Ukuran DataFrame Setelah Pembersihan:** Setelah seluruh tahapan data preparation, DataFrame memiliki **[Jumlah Baris Akhir]** baris dan **[Jumlah Kolom Akhir]** kolom. (Isi angka spesifik dari output kode Anda).
-
-## Modeling
+*   **Ukuran DataFrame Setelah Pembersihan:** Setelah seluruh tahapan data preparation, DataFrame memiliki **[Jumlah Baris Akhir]** baris dan **[Jumlah Kolom Akhir]** kolom. (Isi angka spesifik dari output kode Anda setelah langkah terakhir).## Modeling
 
 Pada tahap pemodelan, sistem rekomendasi berbasis konten dibangun menggunakan representasi teks dan pengukuran kemiripan.
 
+## Modeling
+
+Tahap pemodelan adalah inti dari pembangunan sistem rekomendasi. Pada tahap ini, data yang telah dibersihkan dan dipersiapkan digunakan untuk membangun model yang dapat menghitung kemiripan antar game dan menghasilkan rekomendasi. Model yang dikembangkan pada proyek ini menggunakan pendekatan Content-Based Filtering dengan memanfaatkan representasi tekstual game.
+
 **Algoritma dan Tahapan Pemodelan:**
 
-1.  **Ekstraksi Fitur Teks (TF-IDF - Term Frequency-Inverse Document Frequency):**
-    *   Objek `TfidfVectorizer` diinisialisasi dengan `stop_words='english'` untuk menghapus kata-kata umum dalam bahasa Inggris yang kurang informatif.
-    *   Metode `fit_transform()` diterapkan pada kolom `combined_content` dari DataFrame yang telah diproses. Ini akan:
-        *   Mempelajari kosakata unik dari seluruh dokumen (game) dalam `combined_content`.
-        *   Menghitung skor TF-IDF untuk setiap kata dalam setiap dokumen.
-        *   Menghasilkan matriks `tfidf_matrix` di mana baris merepresentasikan game, kolom merepresentasikan kata, dan nilai adalah skor TF-IDF.
-    *   *Alasan Penggunaan TF-IDF:* TF-IDF adalah teknik yang efektif untuk mengubah teks menjadi vektor numerik. Ini memberikan bobot yang lebih tinggi pada kata-kata yang sering muncul dalam sebuah dokumen tetapi jarang muncul di seluruh korpus, sehingga menonjolkan kata kunci unik untuk setiap game. Penggunaan `stop_words` membantu mengurangi dimensi matriks dan fokus pada kata-kata yang lebih bermakna.
-    *   *Kelebihan:* Mampu menangkap pentingnya kata-kata unik, representasi numerik yang siap untuk perhitungan matematis.
-    *   *Kekurangan:* Mengabaikan urutan kata (Bag-of-Words), sensitif terhadap variasi kata (membutuhkan stemming/lemmatization jika diperlukan, meskipun tidak dilakukan secara eksplisit di sini).
+1.  **Representasi Teks Game (TF-IDF):**
+    Seperti yang telah dijelaskan di bagian Data Preparation, kolom `combined_content` (gabungan genre dan kategori game) telah diubah menjadi matriks numerik menggunakan teknik TF-IDF (Term Frequency-Inverse Document Frequency). Proses ini menghasilkan matriks `tfidf_matrix` di mana setiap baris merepresentasikan sebuah game dan setiap kolom merepresentasikan sebuah kata dari kosakata unik dataset, dengan nilai sel menunjukkan bobot TF-IDF kata tersebut dalam game.
 
-2.  **Pengukuran Kemiripan (Cosine Similarity):**
-    *   Fungsi `cosine_similarity` dari `sklearn.metrics.pairwise` digunakan untuk menghitung matriks kemiripan antar vektor TF-IDF (`tfidf_matrix`).
-    *   Outputnya adalah matriks `cosine_sim` berukuran N x N (di mana N adalah jumlah game), di mana setiap sel `(i, j)` berisi skor kemiripan kosinus antara game ke-i dan game ke-j. Skor berkisar antara 0 (tidak mirip sama sekali) hingga 1 (sangat mirip).
-    *   *Alasan Penggunaan Cosine Similarity:* Cosine Similarity mengukur sudut antara dua vektor dalam ruang multidimensional. Dalam konteks TF-IDF, ini secara efektif mengukur seberapa mirip konten dua dokumen (game) terlepas dari panjangnya. Ini adalah metrik standar untuk mengukur kemiripan antar dokumen dalam sistem rekomendasi berbasis konten tekstual.
-    *   *Kelebihan:* Efektif untuk data tekstual yang direpresentasikan sebagai vektor, tidak sensitif terhadap panjang dokumen.
-    *   *Kekurangan:* Tidak mempertimbangkan besarnya vektor, hanya arahnya.
+2.  **Pengukuran Kemiripan Antar Game (Cosine Similarity):**
+    Setelah representasi vektor dari setiap game diperoleh, langkah selanjutnya adalah mengukur seberapa mirip setiap game satu sama lain. Untuk ini, digunakan **Cosine Similarity**.
+    *   `sklearn.metrics.pairwise.cosine_similarity()` dihitung pada `tfidf_matrix`.
+    *   *Alasan Penggunaan Cosine Similarity:* Cosine Similarity adalah metrik yang tepat untuk data vektor yang dihasilkan oleh TF-IDF. Ini mengukur kosinus sudut antara dua vektor, yang secara efektif menentukan seberapa mirip arah kedua vektor tersebut di ruang multidimensional. Dalam konteks ini, skor kemiripan kosinus yang tinggi antara dua game menunjukkan bahwa vektor TF-IDF mereka memiliki arah yang serupa, artinya konten tekstual (genre dan kategori) mereka sangat mirip. Metrik ini relatif tidak terpengaruh oleh panjang dokumen (jumlah kata) dan berfokus pada proporsi kata kunci yang sama.
+    *   *Kelebihan Cosine Similarity:* Efektif dalam menentukan kemiripan antar dokumen berdasarkan konten kata, robust terhadap perbedaan panjang dokumen.
+    *   *Kekurangan Cosine Similarity:* Tidak mempertimbangkan besaran vektor (hanya arah), dapat kurang efektif jika perbedaan besaran vektor juga penting.
 
-3.  **Fungsi Rekomendasi (`get_recommendations`):**
-    *   Fungsi ini mengambil nama game sebagai input.
-    *   Menormalisasi nama game input (huruf kecil, tanpa spasi ekstra) dan mencocokkannya dengan kolom `name` di DataFrame yang sudah dinormalisasi untuk menemukan indeks game tersebut. Penting untuk menggunakan DataFrame yang index-nya sudah di-reset agar sesuai dengan indeks di `cosine_sim`.
-    *   Jika game tidak ditemukan, fungsi mencoba mencari nama game yang mirip sebagai saran.
-    *   Jika game ditemukan, fungsi mengambil baris yang sesuai dari matriks `cosine_sim` (yang berisi skor kemiripan game input dengan semua game lain).
-    *   Skor kemiripan diurutkan secara menurun, dan 10 game teratas (selain game itu sendiri) diambil sebagai rekomendasi.
-    *   Fungsi mengembalikan DataFrame yang berisi nama dan genre dari game yang direkomendasikan serta indeks game tersebut.
+    Hasil dari perhitungan ini adalah matriks `cosine_sim`, di mana `cosine_sim[i][j]` adalah skor kemiripan antara game ke-i dan game ke-j. Matriks ini adalah dasar untuk menemukan game serupa.
+
+3.  **Fungsi Penghasil Rekomendasi (`get_recommendations`):**
+    Sebuah fungsi Python bernama `get_recommendations` dibuat untuk mengotomatisasi proses mendapatkan rekomendasi.
+    *   Fungsi ini mengambil **nama game** sebagai input, matriks `cosine_sim`, dan jumlah rekomendasi yang diinginkan (`top_n`).
+    *   Di dalamnya, nama game input dinormalisasi (menjadi huruf kecil, tanpa spasi ekstra) dan dicari indeksnya dalam DataFrame `df` yang sudah diproses (dan indexnya sudah di-reset).
+    *   Jika game tidak ditemukan, fungsi mencoba mencari game dengan nama yang mirip sebagai saran kepada pengguna.
+    *   Jika game ditemukan, fungsi mengambil baris yang sesuai dari matriks `cosine_sim` berdasarkan indeks game target. Baris ini berisi skor kemiripan game target dengan semua game lain.
+    *   Skor kemiripan diurutkan secara menurun, dan indeks dari `top_n` game dengan skor kemiripan tertinggi (selain game target itu sendiri) diekstrak.
+    *   Fungsi mengembalikan DataFrame yang berisi nama dan genre dari game-game yang direkomendasikan, serta daftar indeks game tersebut. Penggunaan `.iloc` dengan indeks yang sesuai dan `.reset_index(drop=True)` memastikan output yang bersih.
 
 *   **Improvement / Alternatif Algoritma:**
-    *   *Saat ini, hanya satu pendekatan (TF-IDF + Cosine Similarity) yang diimplementasikan.*
-    *   Sebagai bentuk improvement, dapat dilakukan hyperparameter tuning pada `TfidfVectorizer`. Parameter yang dapat dieksplorasi meliputi:
-        *   `ngram_range`: Menggunakan n-gram (misalnya, `(1, 2)` untuk unigram dan bigram) dapat menangkap frasa atau kombinasi kata yang lebih bermakna daripada hanya kata tunggal.
-        *   `max_df` dan `min_df`: Mengatur ambang batas frekuensi dokumen dapat membantu menghapus kata-kata yang terlalu umum atau terlalu jarang, sehingga meningkatkan kualitas representasi.
-    *   Tuning dapat dilakukan secara manual dengan mencoba kombinasi parameter yang berbeda atau menggunakan teknik pencarian parameter seperti Grid Search atau Random Search jika cakupan parameter luas.
+    Model yang diimplementasikan saat ini adalah pendekatan dasar berbasis konten dengan TF-IDF dan Cosine Similarity. Untuk meningkatkan kinerja atau menjelajahi opsi lain, beberapa area improvement dapat dipertimbangkan:
+    *   **Hyperparameter Tuning TF-IDF:** Melakukan tuning pada parameter `TfidfVectorizer` seperti `ngram_range` (misal, (1, 2) untuk menyertakan bigram), `max_df`, atau `min_df` dapat menghasilkan representasi teks yang lebih optimal dan berpotensi meningkatkan kualitas kemiripan.
+    *   **Fitur Konten Lebih Kaya:** Memasukkan kolom tekstual lain yang ada di dataset (misalnya, `steamspy_tags` atau bahkan deskripsi game penuh jika tersedia setelah preproses) ke dalam `combined_content` dapat memberikan representasi game yang lebih detail dan akurat.
+    *   **Metode Pengukuran Kemiripan Lain:** Meskipun Cosine Similarity adalah pilihan umum, metrik lain seperti Euclidean Distance (meskipun kurang umum untuk TF-IDF) bisa dieksplorasi, tergantung karakteristik data.
+    *   **Alternatif Algoritma:** Untuk perbandingan atau solusi alternatif, dapat dipertimbangkan:
+        *   **Collaborative Filtering:** Membangun model berbasis interaksi pengguna (rating, playtime) jika data tersebut dianggap relevan untuk preferensi pengguna yang lebih personal.
+        *   **Teknik Embedding Teks Lanjutan:** Menggunakan metode seperti Word2Vec, GloVe, atau FastText untuk mendapatkan representasi vektor kata yang dapat digabungkan untuk merepresentasikan game.
+
+*   **Contoh Hasil Rekomendasi:**
+    Untuk memberikan gambaran mengenai hasil rekomendasi yang dihasilkan oleh model, berikut adalah contoh output Top-10 rekomendasi untuk game target "**super star blast**" :
+    ### Contoh Hasil Rekomendasi
+
+Berikut adalah contoh 10 game teratas yang direkomendasikan untuk game target "**super star blast**" (ganti nama game target jika relevan):
+
+| Peringkat | Nama Game                        | Genre                                   |
+|-----------|----------------------------------|-----------------------------------------|
+| 1         | capsule force                    | Action;Indie                            |
+| 2         | defenders of the last colony     | Action;Indie                            |
+| 3         | mactabilis                       | Action;Indie                            |
+| 4         | aces of the luftwaffe - squadron | Action;Indie                            |
+| 5         | shock troopers                   | Action                                  |
+| 6         | heartz: co-hope puzzles          | Action;Adventure;Indie                  |
+| 7         | cloudrift                        | Action;Casual;Indie                     |
+| 8         | urban justice                    | Action;Adventure;Casual;Indie           |
+| 9         | brawl                            | Action;Indie                            |
+| 10        | bacterium / 生命之旅               | Action;Adventure;Indie;RPG;Simulation   |
+
 
 ## Evaluation
 
