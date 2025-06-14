@@ -36,38 +36,58 @@ Bagian ini menguraikan masalah yang dihadapi dalam domain game digital dan tujua
 
 ## Data Understanding
 
-Dataset yang digunakan dalam proyek ini adalah "Steam Store Games" yang diunduh dari Kaggle. Dataset ini berisi informasi komprehensif tentang game yang tersedia di platform Steam, termasuk detail seperti nama, developer, genre, kategori, rating, dan harga. Dataset ini berfungsi sebagai basis data untuk membangun dan melatih sistem rekomendasi.
+Dataset yang digunakan dalam proyek ini adalah **Steam Store Games** yang diunduh dari [Kaggle](https://www.kaggle.com/datasets/nikdavis/steam-store-games). Dataset ini berisi informasi komprehensif tentang berbagai game yang tersedia di platform Steam, mencakup aspek-aspek seperti nama game, genre, pengembang, rating pengguna, waktu bermain, dan harga. Dataset ini menjadi sumber utama dalam membangun sistem rekomendasi berbasis konten.
 
-*   **Sumber Dataset:** [https://www.kaggle.com/datasets/nikdavis/steam-store-games](https://www.kaggle.com/datasets/nikdavis/steam-store-games)
-*   **Ukuran Dataset Awal:** Dataset awal memiliki **27075** baris dan **18** kolom.
+- **Sumber Dataset:** [Steam Store Games - Kaggle](https://www.kaggle.com/datasets/nikdavis/steam-store-games)
+- **Ukuran Dataset Awal:** Dataset awal terdiri dari **27075 baris** dan **18 kolom**.
 
-Berikut adalah uraian variabel atau fitur pada dataset:
+### Kondisi Data Awal
 
-*   **appid:** ID unik untuk setiap game di Steam. Tipe data: integer.
-*   **name:** Nama game. Tipe data: object (string).
-*   **release_date:** Tanggal rilis game. Tipe data: object (string) atau datetime (setelah preproses).
-*   **english:** Indikator (0 atau 1) apakah deskripsi game tersedia dalam bahasa Inggris. Tipe data: integer.
-*   **developer:** Nama developer game. Tipe data: object (string).
-*   **publisher:** Nama publisher game. Tipe data: object (string).
-*   **platforms:** Platform yang didukung game (Windows, Mac, Linux), dipisahkan oleh ';'. Tipe data: object (string).
-*   **required_age:** Batasan usia yang diperlukan untuk memainkan game. Tipe data: integer.
-*   **categories:** Kategori game (misalnya, Single-player, Multi-player, Steam Cloud), dipisahkan oleh ';'. Tipe data: object (string).
-*   **genres:** Genre game (misalnya, Action, Adventure, Indie), dipisahkan oleh ';'. Tipe data: object (string).
-*   **steamspy_tags:** Tag yang diberikan oleh komunitas SteamSpy (misalnya, Great Soundtrack, Story Rich), dipisahkan oleh ';'. Tipe data: object (string).
-*   **positive_ratings:** Jumlah rating positif yang diterima game. Tipe data: integer.
-*   **negative_ratings:** Jumlah rating negatif yang diterima game. Tipe data: integer.
-*   **average_playtime:** Rata-rata waktu bermain game (dalam menit). Tipe data: integer.
-*   **median_playtime:** Median waktu bermain game (dalam menit). Tipe data: integer.
-*   **owners:** Perkiraan jumlah pemilik game. Tipe data: object (string) dengan rentang.
-*   **price:** Harga game. Tipe data: float.
-*   **about_the_game:** Deskripsi singkat tentang game. Tipe data: object (string).
-*   **background:** Tautan ke gambar latar belakang game. Tipe data: object (string).
-*   **screenshots:** Tautan ke tangkapan layar game. Tipe data: object (string).
+Berdasarkan eksplorasi awal terhadap dataset:
 
-*   **Variabel Tambahan yang Dibuat:**
-    *   **combined_content:** Kolom yang menggabungkan teks dari 'genres' dan 'categories' (sesuai implementasi model Anda). Tipe data: object (string).
-    *   **content_length:** Panjang teks di kolom 'combined_content'. Tipe data: integer.
-    *   **combined:** Kolom yang menggabungkan teks dari 'genres' dan 'developer' (tidak digunakan dalam model rekomendasi saat ini). Tipe data: object (string).
+- **Missing Values**:
+  - Kolom `developer` memiliki **1** baris dengan nilai kosong.
+  - Kolom `publisher` memiliki **14** baris dengan nilai kosong.
+  - Beberapa kolom lain seperti `required_age`, `price`, dan `achievements` juga memiliki nilai kosong, namun jumlahnya lebih sedikit.
+- **Outlier**:
+  - Terdapat outlier pada kolom numerik seperti `price`, `positive_ratings`, `negative_ratings`, dan `required_age`. Outlier ini kemudian diidentifikasi dan diatasi menggunakan metode IQR pada tahap Data Preparation.
+
+### Deskripsi Variabel Utama
+
+Berikut adalah deskripsi kolom-kolom (fitur) yang terdapat dalam dataset dan digunakan dalam analisis:
+
+| Nama Kolom         | Deskripsi                                                                 | Tipe Data |
+|--------------------|---------------------------------------------------------------------------|-----------|
+| `appid`            | ID unik game di platform Steam                                            | Integer   |
+| `name`             | Nama game                                                                 | Object    |
+| `release_date`     | Tanggal rilis game                                                        | Object    |
+| `english`          | Indikator apakah game tersedia dalam Bahasa Inggris (0 = tidak, 1 = ya)  | Integer   |
+| `developer`        | Nama pengembang game                                                      | Object    |
+| `publisher`        | Nama penerbit game                                                        | Object    |
+| `platforms`        | Platform yang didukung (Windows, Mac, Linux)                              | Object    |
+| `required_age`     | Batasan usia minimum untuk memainkan game                                 | Integer   |
+| `categories`       | Kategori game (misal: Single-player, Multi-player)                        | Object    |
+| `genres`           | Genre game (misal: Action, Indie, Simulation)                             | Object    |
+| `steamspy_tags`    | Tag komunitas dari SteamSpy                                               | Object    |
+| `achievements`     | Jumlah pencapaian (achievements) dalam game                              | Integer   |
+| `positive_ratings` | Jumlah rating positif                                                     | Integer   |
+| `negative_ratings` | Jumlah rating negatif                                                     | Integer   |
+| `average_playtime` | Rata-rata waktu bermain (menit)                                           | Integer   |
+| `median_playtime`  | Median waktu bermain (menit)                                              | Integer   |
+| `owners`           | Rentang jumlah pemilik game (misal: 20,000 - 50,000)                      | Object    |
+| `price`            | Harga game (dalam satuan USD)                                             | Float     |
+
+> ❌ Kolom seperti `about_the_game`, `background`, dan `screenshots` **tidak terdapat** dalam dataset `games.csv` dan oleh karena itu **tidak dijelaskan** dalam bagian ini.
+
+### Fitur Tambahan yang Dibuat
+
+Beberapa fitur baru dibuat selama proses data preparation untuk mendukung proses pemodelan sistem rekomendasi:
+
+| Nama Kolom         | Deskripsi                                                                 |
+|--------------------|---------------------------------------------------------------------------|
+| `combined`         | Gabungan teks dari `genres` dan `developer`                              |
+| `combined_content` | Gabungan teks dari `genres` dan `categories`, digunakan untuk TF-IDF     |
+| `content_length`   | Panjang teks (jumlah karakter) dari kolom `combined_content`             |
 
 ## Data Preparation
 
@@ -75,65 +95,78 @@ Tahap Data Preparation merupakan langkah krusial untuk memastikan data dalam kon
 
 ## Data Preparation
 
-Tahap Data Preparation merupakan langkah krusial untuk memastikan data dalam kondisi yang bersih, konsisten, dan siap untuk digunakan dalam proses pemodelan. Pada tahap ini, dilakukan serangkaian manipulasi data untuk menangani missing value, outlier, format data yang tidak sesuai, serta penyesuaian fitur.
+Tahap *Data Preparation* merupakan langkah penting untuk memastikan data dalam kondisi bersih, konsisten, dan siap digunakan dalam proses pemodelan sistem rekomendasi berbasis konten. Pada tahap ini dilakukan beberapa proses untuk menghapus data yang tidak relevan, menangani missing value, mendeteksi dan menghapus outlier, serta membentuk fitur baru yang akan digunakan dalam pemodelan.
 
-**Proses Data Preparation:**
+**Langkah-langkah yang dilakukan pada tahap ini meliputi:**
 
-1.  **Penanganan Missing Values Awal (Dropna Global):**
-    *   Langkah pertama dalam menangani missing value adalah dengan menghapus baris yang mengandung nilai kosong pada kolom manapun menggunakan perintah `df.dropna()`.
-        *   *Alasan Diperlukan:* Baris yang memiliki missing value pada kolom-kolom penting seperti `developer` atau `publisher` tidak memberikan informasi lengkap mengenai atribut kunci game. Penghapusan baris-baris ini pada tahap awal adalah pendekatan pembersihan cepat untuk memastikan setiap observasi memiliki informasi dasar yang esensial. Langkah ini efektif untuk mengurangi dataset dari baris yang kurang lengkap di berbagai atribut.
-        *   *Dampak:* Langkah ini menghapus semua baris yang memiliki setidaknya satu nilai kosong di kolom manapun saat perintah dijalankan, termasuk baris dengan missing value pada kolom `developer` dan `publisher`.
+1. **Penghapusan Kolom yang Tidak Relevan:**
+   - Kolom `appid` dihapus karena hanya berfungsi sebagai ID unik dan tidak memberikan informasi bermakna terhadap konten game.
+   - *Alasan:* Tidak berkontribusi terhadap fitur yang dapat digunakan dalam sistem rekomendasi.
+   - *Dampak:* Jumlah kolom berkurang satu tanpa kehilangan informasi konten penting.
 
-2.  **Identifikasi dan Penghapusan Kolom dengan Banyak Missing Value:**
-    *   Setelah `df.dropna()` awal, dilakukan pengecekan kembali jumlah missing value yang tersisa.
-    *   Kolom dengan proporsi missing value yang sangat tinggi (di atas ambang batas 50%) diidentifikasi dan dihapus dari DataFrame.
-        *   *Alasan Diperlukan:* Meskipun `df.dropna()` awal sudah menghapus banyak missing value, beberapa mungkin tersisa atau muncul kembali setelah operasi lain (misalnya, konversi tipe data dengan `errors='coerce'` di kode yang lengkap). Menghapus kolom dengan mayoritas data hilang memastikan dataset hanya berisi kolom yang memiliki informasi substansial dan relevan untuk analisis dan pemodelan.
+2. **Penanganan Missing Value Secara Spesifik:**
+   - Data yang memiliki missing value pada kolom `developer` dan `publisher` dihapus menggunakan `dropna(subset=['developer', 'publisher'])`.
+   - *Alasan:* Developer dan publisher merupakan informasi penting dalam deskripsi game dan bisa berkontribusi dalam proses ekstraksi konten.
+   - *Dampak:* Dataset menjadi lebih bersih dengan hanya menyisakan baris yang memiliki informasi lengkap untuk dua kolom penting tersebut.
 
-3.  **Penghapusan Baris dengan Missing Value pada Kolom Penting yang Ada:**
-    *   Didefinisikan daftar kolom yang dianggap penting untuk model (`genres`, `tags`, `about_the_game`).
-    *   Dataset kemudian difilter untuk menghapus baris yang masih memiliki missing value pada kolom-kolom yang termasuk dalam daftar "penting" *dan masih ada* di DataFrame.
-        *   *Alasan Diperlukan:* Kolom-kolom ini (`genres`, `tags`, `about_the_game`) sangat krusial sebagai sumber informasi konten untuk model berbasis teks. Menghapus baris yang masih memiliki missing value di sini memastikan bahwa setiap game yang digunakan untuk pemodelan memiliki data konten yang memadai untuk proses ekstraksi fitur teks.
+3. **Konversi Tipe Data Numerik:**
+   - Kolom `achievements`, `positive_ratings`, `negative_ratings`, `average_playtime`, `median_playtime`, dan `price` dikonversi menjadi tipe data float agar bisa digunakan dalam analisis numerik.
+   - *Alasan:* Memastikan data bertipe numerik untuk memungkinkan perhitungan jarak, korelasi, dan analisis lainnya.
+   - *Dampak:* Data menjadi kompatibel dengan metode pemodelan berbasis angka.
 
-4.  **Imputasi Missing Values pada Kolom Spesifik:**
-    *   Missing value pada kolom `required_age` diisi dengan nilai 0 jika kolom tersebut masih ada di DataFrame.
-    *   Missing value pada kolom `price` diisi dengan nilai 0 jika kolom tersebut masih ada di DataFrame.
-        *   *Alasan Diperlukan:* Kolom numerik ini penting untuk analisis atau penggunaan fitur di masa mendatang. Mengisi missing value dengan 0 adalah pendekatan sederhana untuk memastikan tidak ada nilai kosong yang tersisa pada kolom yang akan digunakan. Pendekatan 0 dipilih sebagai nilai default yang mengindikasikan tidak ada batasan usia atau harga gratis.
+4. **Penanganan Outlier:**
+   - Menggunakan metode IQR (*Interquartile Range*), outlier pada kolom `price`, `positive_ratings`, `negative_ratings`, `required_age`, dan `achievements` dihapus.
+   - *Alasan:* Mengurangi pengaruh nilai ekstrem yang bisa menyebabkan bias dalam model.
+   - *Dampak:* Dataset menjadi lebih representatif terhadap pola umum dari populasi data.
 
-5.  **Normalisasi Nama Kolom:**
-    *   Nama-nama kolom diubah menjadi huruf kecil dan spasi diganti dengan underscore (`_`). (Berdasarkan kode Anda, langkah ini sebenarnya dilakukan lebih awal di notebook, tetapi untuk kelengkapan, bisa disebutkan di sini sebagai bagian dari pembersihan awal).
-        *   *Alasan Diperlukan:* Normalisasi nama kolom memudahkan akses dan konsistensi dalam penulisan kode.
+5. **Normalisasi Nama Game:**
+   - Kolom `name` dinormalisasi menjadi huruf kecil dan dihapus spasi di awal/akhir.
+   - *Alasan:* Konsistensi dalam pencarian dan pencocokan nama game.
+   - *Dampak:* Menghindari duplikasi karena perbedaan kapitalisasi atau spasi.
 
-6.  **Penghapusan Kolom 'appid':**
-    *   Kolom 'appid' dihapus dari DataFrame. (Seperti normalisasi nama kolom, ini juga dilakukan lebih awal di notebook).
-        *   *Alasan Diperlukan:* Kolom 'appid' merupakan identifikasi unik dan tidak relevan untuk fitur konten yang digunakan dalam model ini.
+6. **Pembuatan Fitur Gabungan `combined_content`:**
+   - Kolom `combined_content` dibentuk dengan menggabungkan nilai dari kolom `genres` dan `categories`, yang sebelumnya diisi nilai kosong dengan string kosong jika ada missing value.
+   - *Alasan:* Menyatukan informasi konten utama untuk digunakan dalam representasi berbasis teks (TF-IDF).
+   - *Dampak:* Memberikan representasi teks tunggal yang kaya terhadap karakteristik konten tiap game.
 
-7.  **Konversi Tipe Data Numerik:**
-    *   Beberapa kolom dikonversi menjadi tipe data numerik (float atau integer) menggunakan `pd.to_numeric` dengan `errors='coerce'`. Kolom yang dikonversi meliputi `achievements`, `positive_ratings`, `negative_ratings`, `average_playtime`, `median_playtime`, dan `price`. (Langkah ini juga dilakukan lebih awal di notebook, setelah penghapusan `appid` dan sebelum pembuatan kolom `combined`).
-        *   *Alasan Diperlukan:* Memastikan tipe data numerik yang tepat memungkinkan operasi matematis dan penggunaan kolom dalam algoritma yang memerlukan input numerik.
+7. **Pembuatan Fitur Tambahan `content_length`:**
+   - Panjang karakter dari kolom `combined_content` dihitung dan disimpan dalam kolom baru `content_length`.
+   - *Alasan:* Dapat digunakan untuk eksplorasi atau validasi panjang konten yang tersedia.
+   - *Dampak:* Memberikan gambaran mengenai seberapa informatif setiap entri konten.
 
-8.  **Pembuatan Kolom Gabungan 'combined' (genres dan developer):**
-    *   Kolom baru bernama `combined` dibuat dengan menggabungkan teks dari kolom `genres` dan `developer`. Missing value diisi string kosong sebelum digabung. (Langkah ini dilakukan setelah konversi tipe data numerik).
-        *   *Alasan Diperlukan:* Kolom ini dibuat sebagai fitur potensial untuk menggabungkan informasi genre dan pengembang, meskipun tidak digunakan dalam model rekomendasi berbasis konten yang ditunjukkan.
+8. **Reset Index DataFrame:**
+   - Setelah penghapusan baris karena missing value atau outlier, index di-reset ulang agar kembali konsisten dari 0 hingga N-1.
+   - *Alasan:* Memastikan indeks tetap rapi dan sesuai saat digunakan dalam pemodelan atau pemanggilan ulang rekomendasi.
+   - *Dampak:* Memudahkan proses identifikasi baris dan menghindari error akibat index yang tidak berurutan.
 
-9.  **Menangani Outlier (Menggunakan IQR):**
-    *   Outlier pada kolom numerik terpilih (`price`, `positive_ratings`, `negative_ratings`, `required_age`, `achievements`) dihapus menggunakan metode IQR. Baris dengan nilai di luar batas `Q1 - 1.5*IQR` dan `Q3 + 1.5*IQR` untuk kolom-kolom ini dihapus dari dataset.
-        *   *Alasan Diperlukan:* Menghapus outlier membantu menghasilkan data yang lebih homogen dan mengurangi pengaruh nilai ekstrem, yang dapat meningkatkan akurasi pengukuran kemiripan.
+---
 
-10. **Normalisasi Nama Game:**
-    *   Kolom `name` diubah menjadi tipe data string, spasi di awal dan akhir dihapus, dan semua teks dikonversi menjadi huruf kecil.
-        *   *Alasan Diperlukan:* Normalisasi nama game penting untuk konsistensi saat mencari game input dan mencocokkannya dengan data.
+**Ukuran Dataset Setelah Pembersihan:**
+- Setelah semua proses pembersihan dilakukan, ukuran akhir dataset menjadi **10823 baris dan 18 kolom**.
 
-11. **Reset Index DataFrame:**
-    *   Setelah serangkaian operasi penghapusan baris, index DataFrame direset untuk memastikan index berurutan kembali dari 0 hingga N-1.
-        *   *Alasan Diperlukan:* Reset index penting untuk pencocokan indeks antara DataFrame dan matriks kemiripan saat mengambil rekomendasi.
+9. **Transformasi Teks Menjadi Representasi Numerik (TF-IDF):**
+    * Setelah kolom `combined_content` selesai dibuat, teks dalam kolom tersebut diubah menjadi representasi numerik menggunakan teknik **TF-IDF (Term Frequency-Inverse Document Frequency)**.
+    * TF-IDF memberikan bobot pada kata berdasarkan seberapa sering kata muncul dalam suatu dokumen dibandingkan dengan seluruh dokumen lainnya.
 
-12. **Pembuatan Kolom Gabungan 'combined_content' (genres dan categories):**
-    *   Kolom baru bernama `combined_content` dibuat dengan menggabungkan teks dari kolom `genres` dan `categories`. Missing value diisi string kosong sebelum digabungkan. Kolom ini akan menjadi input utama untuk TF-IDF.
-        *   *Alasan Diperlukan:* Menggabungkan informasi dari kolom genre dan kategori menciptakan satu representasi konten yang lebih kaya untuk setiap game, yang akan digunakan oleh model rekomendasi berbasis konten.
+    ```python
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.metrics.pairwise import cosine_similarity
 
-*   **Ukuran DataFrame Setelah Pembersihan:** Setelah seluruh tahapan data preparation, DataFrame memiliki **[Jumlah Baris Akhir]** baris dan **[Jumlah Kolom Akhir]** kolom. (Isi angka spesifik dari output kode Anda setelah langkah terakhir).## Modeling
+    # Transformasi teks menjadi matriks TF-IDF
+    tfidf = TfidfVectorizer(stop_words='english')
+    tfidf_matrix = tfidf.fit_transform(df['combined_content'])
 
-Pada tahap pemodelan, sistem rekomendasi berbasis konten dibangun menggunakan representasi teks dan pengukuran kemiripan.
+    # Hitung cosine similarity antar semua game berdasarkan konten
+    cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
+
+    # Cetak dimensi hasil untuk verifikasi
+    print(f"Shape of df: {df.shape}")
+    print(f"Shape of tfidf_matrix: {tfidf_matrix.shape}")
+    print(f"Shape of cosine_sim: {cosine_sim.shape}")
+    ```
+
+    *Alasan Diperlukan:* Representasi numerik ini memungkinkan pengukuran kemiripan antar game menggunakan metrik **cosine similarity**, yang menjadi dasar dari sistem rekomendasi berbasis konten.
+
 
 ## Modeling
 
@@ -221,7 +254,7 @@ Dalam konteks evaluasi ini, sebuah game dianggap "relevan" dengan game target ji
 
 **Hasil Proyek Berdasarkan Metrik Evaluasi:**
 
-Evaluasi dilakukan untuk game target "**crow**" dengan nilai `k = 10`.
+Evaluasi dilakukan untuk game target "**super star blast**" dengan nilai `k = 10`.
 
 *   **Precision@10:** 1.00
     *   *Interpretasi:* Hasil Precision@10 sebesar 1.00 menunjukkan bahwa **semua** (100%) dari 10 game teratas yang direkomendasikan untuk game "crow" dianggap relevan, yaitu memiliki setidaknya satu genre yang sama dengan "crow". Ini mengindikasikan bahwa rekomendasi yang diberikan di posisi paling atas sangat akurat dalam hal kesamaan genre.
@@ -230,7 +263,7 @@ Evaluasi dilakukan untuk game target "**crow**" dengan nilai `k = 10`.
     *   *Interpretasi:* Hasil Recall@10 sebesar 0.00 berarti bahwa **tidak ada satu pun** (0%) dari total game relevan yang ada di seluruh dataset (game dengan genre yang sama dengan "crow") yang berhasil masuk ke dalam daftar 10 rekomendasi teratas.
 
 *   **NDCG@10:** 1.00
-    *   *Interpretasi:* Hasil NDCG@10 sebesar 1.00 menunjukkan bahwa kualitas peringkat rekomendasi untuk game "crow" adalah sempurna pada posisi 10 teratas, relatif terhadap daftar ideal yang hanya mempertimbangkan relevansi berdasarkan genre. Nilai 1.00 tercapai karena *jika* ada item relevan dalam 10 rekomendasi teratas, mereka ditempatkan di posisi yang optimal. Dikombinasikan dengan Precision 1.00, ini menunjukkan bahwa semua item dalam 10 rekomendasi adalah relevan (sesuai definisi relevansi) dan mereka diberi peringkat dengan cara yang ideal.
+    *   *Interpretasi:* Hasil NDCG@10 sebesar 1.00 menunjukkan bahwa kualitas peringkat rekomendasi untuk game "super star blast" adalah sempurna pada posisi 10 teratas, relatif terhadap daftar ideal yang hanya mempertimbangkan relevansi berdasarkan genre. Nilai 1.00 tercapai karena *jika* ada item relevan dalam 10 rekomendasi teratas, mereka ditempatkan di posisi yang optimal. Dikombinasikan dengan Precision 1.00, ini menunjukkan bahwa semua item dalam 10 rekomendasi adalah relevan (sesuai definisi relevansi) dan mereka diberi peringkat dengan cara yang ideal.
 
 *   **Analisis Hasil:**
     Hasil evaluasi ini memberikan gambaran yang menarik dan sedikit kontradiktif. Precision@10 dan NDCG@10 yang bernilai 1.00 menunjukkan bahwa **untuk game yang direkomendasikan di posisi 1 hingga 10, semuanya dianggap relevan berdasarkan definisi relevansi (memiliki genre yang sama)**, dan penempatannya di posisi teratas sudah optimal. Namun, Recall@10 yang bernilai 0.00 menunjukkan bahwa **meskipun 10 game teratas relevan, mereka tidak mencakup game relevan lainnya yang mungkin ada di dataset** (game lain yang juga memiliki genre yang sama dengan "crow" tetapi tidak muncul di 10 teratas).
@@ -242,6 +275,6 @@ Evaluasi dilakukan untuk game target "**crow**" dengan nilai `k = 10`.
 
     Secara keseluruhan, model ini tampaknya sangat baik dalam merekomendasikan game yang *paling* mirip kontennya (berdasarkan genre/kategori) di posisi teratas. Namun, Recall yang rendah menyarankan bahwa model mungkin tidak efisien dalam menemukan *semua* game relevan yang tersebar di seluruh dataset, terutama jika jumlah game relevan sangat besar. Untuk mendapatkan gambaran kinerja yang lebih lengkap, disarankan untuk menghitung rata-rata metrik ini untuk sejumlah game target yang lebih banyak.
 
-*   **Keterbatasan Evaluasi:** Penting untuk diingat bahwa evaluasi ini dilakukan hanya pada satu game target ("crow") dan menggunakan definisi relevansi berbasis kesamaan genre sederhana. Kinerja model dapat bervariasi untuk game lain. Evaluasi yang lebih robust akan melibatkan perhitungan rata-rata metrik ini untuk sampel game target yang lebih representatif.
+*   **Keterbatasan Evaluasi:** Penting untuk diingat bahwa evaluasi ini dilakukan hanya pada satu game target ("super star blast") dan menggunakan definisi relevansi berbasis kesamaan genre sederhana. Kinerja model dapat bervariasi untuk game lain. Evaluasi yang lebih robust akan melibatkan perhitungan rata-rata metrik ini untuk sampel game target yang lebih representatif.
 
 ---Ini adalah bagian akhir laporan---
