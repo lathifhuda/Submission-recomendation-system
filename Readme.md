@@ -77,8 +77,6 @@ Berikut adalah deskripsi kolom-kolom (fitur) yang terdapat dalam dataset dan dig
 | `owners`           | Rentang jumlah pemilik game (misal: 20,000 - 50,000)                      | Object    |
 | `price`            | Harga game (dalam satuan USD)                                             | Float     |
 
-> ❌ Kolom seperti `about_the_game`, `background`, dan `screenshots` **tidak terdapat** dalam dataset `games.csv` dan oleh karena itu **tidak dijelaskan** dalam bagian ini.
-
 ### Fitur Tambahan yang Dibuat
 
 Beberapa fitur baru dibuat selama proses data preparation untuk mendukung proses pemodelan sistem rekomendasi:
